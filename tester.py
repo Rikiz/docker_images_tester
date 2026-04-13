@@ -9,15 +9,18 @@ def sanitize_name(image: str) -> str:
 
 def test_image(image: str, logs_dir: str) -> dict:
     safe_name = sanitize_name(image)
+    image_logs_dir = os.path.join(logs_dir, safe_name)
+    os.makedirs(image_logs_dir, exist_ok=True)
     results = {}
 
     step1_2_cmd = (
         f"cd /home "
+        f"&& mkdir -p /logs/{safe_name} "
         f"&& sed -i 's/mvn /mvn -o /g' run.sh test-run.sh fix-run.sh "
-        f"&& bash run.sh 2>/logs/{safe_name}_run.log; "
-        f"echo $? > /logs/{safe_name}_run.rc; "
-        f"bash test-run.sh 2>/logs/{safe_name}_test-run.log; "
-        f"echo $? > /logs/{safe_name}_test-run.rc"
+        f"&& bash run.sh 2>/logs/{safe_name}/run.log; "
+        f"echo $? > /logs/{safe_name}/run.rc; "
+        f"bash test-run.sh 2>/logs/{safe_name}/test-run.log; "
+        f"echo $? > /logs/{safe_name}/test-run.rc"
     )
     docker_cmd_1 = [
         "docker",
@@ -47,7 +50,7 @@ def test_image(image: str, logs_dir: str) -> dict:
         return {"image": image, "results": results}
 
     for script in ["run", "test-run"]:
-        rc_file = os.path.join(logs_dir, f"{safe_name}_{script}.rc")
+        rc_file = os.path.join(image_logs_dir, f"{script}.rc")
         try:
             with open(rc_file) as f:
                 rc = int(f.read().strip())
@@ -58,9 +61,10 @@ def test_image(image: str, logs_dir: str) -> dict:
 
     step3_cmd = (
         f"cd /home "
+        f"&& mkdir -p /logs/{safe_name} "
         f"&& sed -i 's/mvn /mvn -o /g' run.sh test-run.sh fix-run.sh "
-        f"&& bash fix-run.sh 2>/logs/{safe_name}_fix-run.log; "
-        f"echo $? > /logs/{safe_name}_fix-run.rc"
+        f"&& bash fix-run.sh 2>/logs/{safe_name}/fix-run.log; "
+        f"echo $? > /logs/{safe_name}/fix-run.rc"
     )
     docker_cmd_2 = [
         "docker",
@@ -85,7 +89,7 @@ def test_image(image: str, logs_dir: str) -> dict:
         results["fix-run"] = {"returncode": -1, "status": f"error: {e}"}
         return {"image": image, "results": results}
 
-    rc_file = os.path.join(logs_dir, f"{safe_name}_fix-run.rc")
+    rc_file = os.path.join(image_logs_dir, "fix-run.rc")
     try:
         with open(rc_file) as f:
             rc = int(f.read().strip())

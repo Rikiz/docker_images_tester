@@ -13,6 +13,7 @@ def test_image(image: str, logs_dir: str) -> dict:
 
     step1_2_cmd = (
         f"cd /home "
+        f"&& sed -i 's/mvn /mvn -o /g' run.sh test-run.sh fix-run.sh "
         f"&& bash run.sh 2>/logs/{safe_name}_run.log; "
         f"echo $? > /logs/{safe_name}_run.rc; "
         f"bash test-run.sh 2>/logs/{safe_name}_test-run.log; "
@@ -57,6 +58,7 @@ def test_image(image: str, logs_dir: str) -> dict:
 
     step3_cmd = (
         f"cd /home "
+        f"&& sed -i 's/mvn /mvn -o /g' run.sh test-run.sh fix-run.sh "
         f"&& bash fix-run.sh 2>/logs/{safe_name}_fix-run.log; "
         f"echo $? > /logs/{safe_name}_fix-run.rc"
     )

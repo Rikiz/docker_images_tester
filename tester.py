@@ -17,9 +17,9 @@ def test_image(image: str, logs_dir: str) -> dict:
         f"cd /home "
         f"&& mkdir -p /logs/{safe_name} "
         f"&& sed -i 's/mvn /mvn -o /g' run.sh test-run.sh fix-run.sh "
-        f"&& bash run.sh 2>/logs/{safe_name}/run.log; "
+        f"&& bash run.sh &>/logs/{safe_name}/run.log; "
         f"echo $? > /logs/{safe_name}/run.rc; "
-        f"bash test-run.sh 2>/logs/{safe_name}/test-run.log; "
+        f"bash test-run.sh &>/logs/{safe_name}/test-run.log; "
         f"echo $? > /logs/{safe_name}/test-run.rc"
     )
     docker_cmd_1 = [
@@ -35,9 +35,7 @@ def test_image(image: str, logs_dir: str) -> dict:
     ]
 
     try:
-        subprocess.run(
-            docker_cmd_1, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=600
-        )
+        subprocess.run(docker_cmd_1, timeout=600)
     except subprocess.TimeoutExpired:
         results["run"] = {"returncode": -1, "status": "timeout"}
         results["test-run"] = {"returncode": -1, "status": "skipped"}
@@ -63,7 +61,7 @@ def test_image(image: str, logs_dir: str) -> dict:
         f"cd /home "
         f"&& mkdir -p /logs/{safe_name} "
         f"&& sed -i 's/mvn /mvn -o /g' run.sh test-run.sh fix-run.sh "
-        f"&& bash fix-run.sh 2>/logs/{safe_name}/fix-run.log; "
+        f"&& bash fix-run.sh &>/logs/{safe_name}/fix-run.log; "
         f"echo $? > /logs/{safe_name}/fix-run.rc"
     )
     docker_cmd_2 = [
@@ -79,9 +77,7 @@ def test_image(image: str, logs_dir: str) -> dict:
     ]
 
     try:
-        subprocess.run(
-            docker_cmd_2, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=600
-        )
+        subprocess.run(docker_cmd_2, timeout=600)
     except subprocess.TimeoutExpired:
         results["fix-run"] = {"returncode": -1, "status": "timeout"}
         return {"image": image, "results": results}
